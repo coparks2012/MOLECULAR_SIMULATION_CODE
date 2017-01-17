@@ -1,0 +1,201 @@
+module mod_initialize
+  use get_started
+  use mod_memory
+  use mod_readfile
+  use mod_init_posit
+  use mod_force
+  use mod_file
+  use mod_LRC
+  use mod_neighbor
+  use mod_pbc
+  use mod_GroFile
+  use mod_buildbond_lists
+  use mod_assign_types
+  use mod_nondimensionalize
+  use mod_sample
+  use mod_cluster
+  use mod_neighbor_cluster
+  use mod_build_ptta
+  use ifport
+
+contains
+
+
+  subroutine initialize
+    implicit none
+    double precision :: rcut0,rcut20
+    integer :: i,j,k,res
+    character(len=50) :: exec,file,newton,auto,rms
+
+
+    !---calculate interaction parameters
+    call read_files_wrapper
+    
+    print*,'NUMBER OF MOLECULES',numMolArray(1)
+
+    box = 130.000d0
+    print*,'box length',box
+    call tinker_KEYfile(vlist_flag)
+
+
+    res =  system('rm tta.xyz_2')
+    res =  system('rm tta.xyz_3')
+    res =  system('rm tta.xyz_4')
+    res =  system('rm tta.xyz_5')
+    
+    res =  system('rm chlor.xyz_2')
+    res =  system('rm chlor.xyz_3')
+    res =  system('rm chlor.xyz_4')
+    res =  system('rm chlor.xyz_5')
+    
+    
+    res =  system('./xyzedit.x chlor.xyz -k tink.key 17')
+    res =  system('./analyze.x chlor.xyz_2  -k tink.key d  >chlor.log')
+    
+    res =  system('./xyzedit.x tta.xyz -k tink.key  17')
+    res =  system('./analyze.x tta.xyz_2  -k tink.key d  >tta.log')
+    
+    res =  system('./xyzedit.x tta.xyz_2 -k tink.key 18 chlor.xyz_2')
+    res =  system('./minimize.x tta.xyz_3 -k tink.key 1.0 >minimize.log')
+    
+    res =  system('./analyze.x tta.xyz_4  -k tink.key d  >analyze.log')
+    res =  system('./analyze.x tta.xyz_4  -k tink.key p  >param.log')
+    res =  system('./analyze.x tta.xyz_4  -k tink.key e  >energy.log')
+    res =  system('./analyze.x tta.xyz_4  -k tink.key g  >general.log')
+    
+    
+    
+    !--- determines the number of particles and molecules
+    call read_in_tinker('tta.xyz_4',0,1)
+    
+    !---read in input file
+    !---calculate number of particles/bonds/angles/dihedrals
+    call init_variables_wrapper
+    
+    !---non dimensionalize
+    call calc_ref_values
+    call nondimensionalize_forcefield
+    call non_dimensionalize_input
+    
+    
+    !---initialize mncellT, mncellD, ncellT,ncellD
+    call init_list_cluster
+    call init_list
+    
+    
+    !---allocate arrays
+    call memory
+    
+    !---memory has been allocated. calculate neighboring cells for clustering vlist
+    call mol_neigh
+    
+    !---print values to screen/file
+    call print_input
+    
+    print*,'NOW LETS ASSIGN TYPES'
+    call assign_atom_types
+    call assign_charge_types
+    call build_mol_list
+    
+    
+    call build_bond_list_wrapper
+    
+    !call Grofile_template
+    
+    
+    !--- reads in positions
+    call read_in_tinker('tta.xyz_4',1,0)
+    call build_ptta
+    call pbc(0)
+    call Mol_GroFile('minimized.gro')
+    
+    
+    
+    !---assign initial random velocities
+    call init_velocity
+    
+    
+    
+    !---calculate initial energy of system
+    call zero_values(0)
+    call force_n2(0)
+    call bond_harmonic(0)
+    call angle_harmonic(0)
+    call dihedral_opls_n2(0)
+    call improper_harmonic(0)
+    
+    print*
+    print*,'potential brute :',potential*reps
+    print*,'electric brute :',e_coul*reps
+    print*,'e_bond',e_bond*reps
+    print*,'e_angle',e_angle*reps
+    print*,'e_dihedral',e_dihedral*reps
+    print*,'e_impropoer:',e_improper*reps
+    print*,'TOTAL POTENTIAL',(potential+e_bond+e_angle+e_dihedral+e_improper)*reps
+    
+    
+    
+    
+    !---initialize cell neighbors
+    if(vlist_flag.ne.0)then
+       
+       if(newton3rd_flag.eq.1)then
+          call neighcell_newton
+       elseif(newton3rd_flag.eq.0)then
+          call neighcell_nonewton
+       endif
+       call neighbor_wrapper(0)
+    endif
+    
+    
+    !---make templare arrays with reference to centroid
+    call center_array_template(1)
+    
+    
+    call force_wrapper(0,0)
+    
+    print*
+    print*,'potential brute :',potential*reps
+    print*,'electric brute :',(e_coul_14+e_coul)*reps
+    print*,'e_bond',e_bond*reps
+    print*,'e_angle',e_angle*reps
+    print*,'e_dihedral',e_dihedral*reps
+    print*,'e_impropoer:',e_improper*reps
+    print*,'TOTAL POTENTIAL',(potential+e_bond+e_angle+e_dihedral+e_improper)*reps
+    
+    
+    
+    
+    !---determine energy at the cutoff
+    call cutoff_energy
+    
+    !---initialize long range correction
+    call long_range_corr_LJ
+    
+    
+    !---open sample files
+    call open_sample_files
+    
+    
+    
+    !call system('./dynamic.x tta.xyz_4 -k tink.key 100000 1.0 0.25 2 300')
+    !call read_in_tinker('coords.020',1)
+    !call lets_convert
+    !call tinker_XYZfile('tta.xyz_4')
+    !call system('./analyze.x tta.xyz_4  -k tink.key d  >analyze.log')
+    
+    call force_wrapper(0,vlist_flag)
+    print*
+    print*,'potential',potential*reps
+    print*,'potential 1-4',pot_14*reps
+    print*,'electric brute :',(e_coul_14+e_coul)*reps
+    print*,'e_bond',e_bond*reps
+    print*,'e_angle',e_angle*reps
+    print*,'e_dihedral',e_dihedral*reps
+    print*,'e_imp',e_improper*reps
+    
+    
+  end subroutine initialize
+  
+  
+end module mod_initialize

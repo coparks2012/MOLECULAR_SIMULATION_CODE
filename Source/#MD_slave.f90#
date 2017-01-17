@@ -1,0 +1,10 @@
+program MD_slave
+  use mod_minimg
+  use mod_force_bond
+  use mod_force_angle
+  use mod_force_dihed
+  use mod_force_correction
+  use mod_force_nonbond
+
+
+  

@@ -1,0 +1,125 @@
+!---specify ensemble
+NVE
+
+!---restart flag, TEM=init template, XYZ=restart,DUM=res_data,notihng=initialize
+DUM
+
+!----filetype flag (0 is lammps 1 is gro)
+1
+	
+!---mol filename
+mol_cndo_alpha.input
+
+!---topol file name
+topol_cndo.top
+
+!---restart file name
+glycine_1500_solv_min.gro
+
+!---vlist flag, 0=n^2, 1 = vlist(no electro), 3 = DSF, 4 = N2 DSF
+3
+
+!---intel flag, 1 = MIC , 0 = no MI1C
+1
+
+!---electrostatic flag 1 = DSF 2 = PME
+2
+
+!---
+80 80 80
+
+!---12 13 14 neighbor interactor factors
+0.0000 0.00000 0.0000 0.5
+
+!---newtons 3rd flag, 1 = 3rd law , 0 = no 3rd law
+0
+
+!---deltat in fs
+2.0
+
+!---rcuts: vdw,coul,padding,template, dens for template
+12.0 12.0 1.5 9.0 6.0 11
+
+!---clustering type
+0
+
+!---system densist
+0.001
+
+!---temperature in kelvin
+300.0000
+
+!--- pressure
+1.0000
+
+!---berendsen barostat
+0.0001
+
+!---alpha damping parameter for DSF
+0.220
+
+!---number of equilibration steps, number of production run steps
+2000 0
+
+!---sampling frequency
+1000
+
+!---adjust frequency(this is monte carlo runs)
+100
+
+!---number of sweeps in nucleation production runs
+10000
+
+!---number of steps in a sweep for nucleation production runs
+25
+
+!---number of steps in a sweep for nucleation equilibration
+25
+
+!---spring constant for nucleation biasing potential
+0.0500
+
+!---annealing temperature for nucleation runs
+244.0
+
+
+
+****annealin temp that we want is 294.9
+
+
+!--------------------------------------------
+current format of this file 
+read in:
+     ensemble
+     restart flag
+     vlist flag (0=n2,1=vlist,3 = DSF)
+     deltat (fs)
+     rcut_VW,rcut_EL, pad,template rcut,dens_rcut,(angstroms)
+     dens
+     temp (K)
+     P      !.... this must be entered in ATM
+     alpha (angstoms^-1)
+     mceq,mcsteps
+     nsample
+     nadjust
+     numSweep
+     numStep
+     kn
+     anneal_temp
+units are nm,ps,amu unless otherwise stated
+     
+
+! electro static cut off paper density
+30.01343375
+
+
+1.4
+44.5868175
+1100
+1
+2.0
+0
+0.1 0.005 
+5000000 0
+100
+100

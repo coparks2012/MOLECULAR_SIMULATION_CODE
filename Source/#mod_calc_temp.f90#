@@ -1,0 +1,6 @@
+module mod_calc_temp
+  use global
+
+  contains 
+    
+    subroutine calc_temp

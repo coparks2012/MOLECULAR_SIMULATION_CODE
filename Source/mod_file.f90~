@@ -1,0 +1,75 @@
+module mod_file
+
+  
+contains
+  
+  subroutine open_sample_files
+    implicit none
+
+    open(unit =10, file = 'temp_eq.dat')
+
+    open(unit =20, file = 'KE_eq.dat')
+
+    open(unit =30, file = 'PE_eq.dat')
+
+    open(unit =40, file = 'total_energy.dat')
+
+    open(unit=50, file = 'Temprun.dat')
+
+    open(unit=60, file = 'KErun.dat')
+
+    open(unit=70, file = 'PErun.dat')
+
+    open(unit = 100,file = 'pressure_run.dat')
+
+    open(unit=80, file = 'temp_all_times.dat')
+
+    open(unit = 200, file = 'XYZ.xyz')
+
+    open(unit = 201, file = 'time_series.gro')
+    open(unit = 202, file = 'time_series_clus.gro')
+
+
+    open(unit = 20190, file = 'energy_drift.dat')
+
+
+    open(unit = 9999, file = 'temp_grocluster.dat')
+    open(unit = 9991, file = 'potential_grocluster.dat')
+    open(unit = 9992, file = 'bond_grocluster.dat')
+    open(unit = 9993, file = 'angle_grocluster.dat')
+    open(unit = 9994, file = 'dihed_grocluster.dat')
+    open(unit = 9995, file = 'impro_grocluster.dat')
+    open(unit = 9996, file = 'pot_14_grocluster.dat')
+    open(unit = 9997, file = 'e_coul_14_grocluster.dat')
+
+    open(unit = 888, file = 'num_eq.dat')
+
+
+  end subroutine open_sample_files
+
+  subroutine open_anneal_files
+    implicit none
+    
+    open(unit = 8975, file = 'temp_anneal.dat')
+    open(unit = 8001, file = 'potential_anneal.dat')
+  end subroutine open_anneal_files
+
+
+
+  subroutine close_files
+    implicit none
+    print*,'closin files:'
+   
+    close(10)
+    close(20)
+    close(30)
+    close(40)
+    close(50)
+    close(60)
+    close(70)
+    close(80)
+    close(100)
+
+  end subroutine close_files
+  
+end module mod_file

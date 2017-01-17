@@ -1,0 +1,25 @@
+module mod_Gaussian
+  use ifport
+  implicit none
+contains
+  
+  double precision function Gaussian()
+    implicit none
+    double precision :: pi
+    double precision :: x1,x2
+    double precision :: r
+
+    r = 2.0d0
+    do while(r.ge.1.)
+       x1 = 2.0d0*rand() -1.0d0
+       x2 = 2.0d0*rand() -1.0d0
+       
+       r =x1*x1 + x2*x2
+    enddo
+
+    Gaussian = x1*sqrt(-2.0d0*log(r)/r)
+    
+    
+  end function Gaussian
+  
+end module mod_Gaussian

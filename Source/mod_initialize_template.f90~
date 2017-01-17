@@ -1,0 +1,145 @@
+module mod_initialize_template
+  use get_started
+  use mod_memory
+  use mod_readfile
+  use mod_init_posit
+  use mod_force
+  use mod_file
+  use mod_LRC
+  use mod_neighbor
+  use mod_pbc
+  use mod_GroFile
+  use mod_buildbond_lists
+  use mod_assign_types
+  use mod_nondimensionalize
+  use mod_sample
+  use mod_cluster
+  use mod_neighbor_cluster
+  use mod_build_ptta
+ 
+
+contains
+
+
+  subroutine initialize_template
+    implicit none
+    double precision :: rcut0,rcut20
+    integer :: i,j,k,res
+    character(len=50) :: exec,file,newton,auto,rms,filename
+
+
+    !---calculate interaction parameters
+    call read_files_wrapper
+    
+    print*,'NUMBER OF MOLECULES',numMolArray(1)
+
+    box = 82.75
+    print*,'box length',box
+    
+    call tinker_KEYfile(vlist_flag)
+
+    res = system('rm catemer_B.xyz_2')
+    res = system('rm catemer_B.xyz_3')
+    res = system('rm catemer_B.xyz_4')
+    res = system('rm catemer_B.xyz_5')
+    
+   ! res =  system('./xyzedit.x chlor.xyz -k tink.key 17')
+   ! res =  system('./xyzedit.x catemer_B.xyz -k tink.key 18 chlor.xyz_2')
+   ! res =  system('./minimize.x catemer_B.xyz_2 -k tink.key 1.0 >minimize.log')
+   ! res =  system('./analyze.x catemer_B.xyz_3  -k tink.key g  >general.log')
+    
+    
+    
+    call read_in_Grofile('alpha_B_nopbc.gro',0)
+
+    !--- determines the number of particles and molecules
+!    call read_in_tinker('catemer_B.xyz_3 ',0,1)
+    
+    !---read in input file
+    !---calculate number of particles/bonds/angles/dihedrals
+    call init_variables_wrapper
+    
+    !---non dimensionalize
+    call calc_ref_values
+    call nondimensionalize_forcefield
+    call non_dimensionalize_input
+    
+    
+    !---initialize mncellT, mncellD, ncellT,ncellD
+    call init_list_cluster
+    call init_list
+    
+    
+    !---allocate arrays
+    call memory
+    
+    !---memory has been allocated. calculate neighboring cells for clustering vlist
+    call mol_neigh
+    
+    !---print values to screen/file
+    call print_input
+    
+    print*,'NOW LETS ASSIGN TYPES'
+    call assign_atom_types
+    call assign_charge_types
+    call build_mol_list
+    
+    
+    call build_bond_list_wrapper
+    
+    !call Grofile_template
+    
+    
+    !--- reads in positions
+    !call read_in_tinker('catemer_B.xyz_3 ',1,0)
+    call read_in_Grofile('alpha_B_nopbc.gro',1)
+    call build_ptta
+    call pbc(0)
+    call Mol_GroFile('minimized.gro')
+    
+    
+    
+    !---assign initial random velocities
+    call init_velocity
+    
+    !---initialize cell neighbors
+    if(vlist_flag.ne.0)then
+       
+       if(newton3rd_flag.eq.1)then
+          call neighcell_newton
+       elseif(newton3rd_flag.eq.0)then
+          call neighcell_nonewton
+       endif
+       call neighbor_wrapper(0)
+    endif
+    
+    
+    !---make templare arrays with reference to centroid
+    call center_array_template(1)
+    
+        
+    
+    !---determine energy at the cutoff
+    call cutoff_energy
+    
+    !---initialize long range correction
+    call long_range_corr_LJ
+    
+    
+    !---open sample files
+    call open_sample_files
+    
+    
+    call force_wrapper(0,vlist_flag)
+    print*
+    print*,'potential',potential*reps
+    print*,'electric brute :',(e_coul_14+e_coul)*reps
+    print*,'e_bond',e_bond*reps
+    print*,'e_angle',e_angle*reps
+    print*,'e_dihedral',e_dihedral*reps
+    print*,'e_imp',e_improper*reps
+       
+  end subroutine initialize_template
+
+
+end module mod_initialize_template

@@ -1,0 +1,30 @@
+module mod_tip4p
+  use global
+  use mod_minimg
+
+  contains
+
+    subroutine redistrib_m_water_force
+      implicit none
+      double precision :: fad_ox(3), fad_h(3)
+      double precision :: r_ox_m(3)
+      double precision :: invlen2_r_ox_m
+      double precision :: rad_factor(3)
+      double precision :: f_rad(3)
+      double precision :: dx,dy,dz
+      integer :: i
+      integer :: atom_o,atom_h1,atom_h2,atom_m
+
+      
+      do i = 1,num_tip4p_pairs
+         atom_o  = tip4p_list(1,i)
+         atom_h1 = tip4p_list(2,i)
+         atom_h2 = tip4p_list(3,i)
+         atom_m  = tip4p_list(4,i)
+
+         !---calculate radial component and add to oxygen
+         dx = position(atom_m)%x - position(atom_o)%x
+         dy = position(atom_m)%y - position(atom_o)%y
+         dz = position(atom_m)%z - position(atom_o)%z
+         
+         call minimg(dx,dy,dz)
